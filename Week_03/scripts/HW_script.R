@@ -59,4 +59,7 @@ ggplot(data = penguins,
         axis.title.x = element_text(margin = margin(t = 10)), #Added length to margins
         axis.title.y = element_text(margin = margin(r = 10)))
 
+#SAVE
+ggsave(here("Week_03","output","HW_penguin_boxplot.png"))
+
 #this concludes this script

@@ -1,0 +1,13 @@
+Time,Tide,Nutrient,Mean_Concentration
+Day,High,Phosphate,0.12617283950617283
+Day,High,Nitrate+Nitrite,0.33629629629629626
+Day,High,Silicate,4.332962962962963
+Night,High,Phosphate,0.136375
+Night,High,Nitrate+Nitrite,0.7446250000000001
+Night,High,Silicate,6.6038749999999995
+Day,Low,Phosphate,0.2057142857142857
+Day,Low,Nitrate+Nitrite,3.1144155844155845
+Day,Low,Silicate,28.083766233766234
+Night,Low,Phosphate,0.19774999999999998
+Night,Low,Nitrate+Nitrite,2.7310000000000003
+Night,Low,Silicate,23.8725
