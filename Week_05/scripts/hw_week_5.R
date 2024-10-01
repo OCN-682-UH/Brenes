@@ -7,6 +7,7 @@
 
 
 #libraries:
+library(patchwork)# for plotting with multiple axes units
 library(tidyverse) #to manipulate date if needed
 library(here) #to help save files
 library(lubridate) #to help recognize dates and time
@@ -98,7 +99,7 @@ summarise(
     mean_depth = mean(Depth, na.rm = TRUE)) #mean depth calculated per min
 
 #View changes:
-View(averaged_data)
+glimpse(averaged_data)
 
 #note: be sure to check for no 'seconds' values, since we rounded to nearest minute
 
@@ -110,6 +111,50 @@ View(averaged_data)
 
 ## plots ##
 
+#I am going to make a line plot of temp and salinity vs. depth plot
+
+ggplot(averaged_data, aes(y = mean_depth)) + #using averaged data and geom_line(), make a line plot
+  geom_line(aes(x = mean_temp, color = "Temperature"), size = 1) + #aes for temp
+  geom_line(aes(x = mean_salinity, color = "Salinity"), size = 1) + #aes for sal
+  
+  scale_y_reverse(limits = c(0.45, 0.2)) +  # reverse  depth axis so it increases downwards
+  
+  # add second axis for salinity
+  scale_x_continuous(name = "Mean Temperature (°C)", 
+                     sec.axis = sec_axis(~ ., name = "Mean Salinity (ppt)")) + # "~" makes the limits the same for both x axis variables
+  
+  scale_color_manual(values = c("Temperature" = "red3", "Salinity" = "blue3")) + #assign colors to variables
+  
+  theme_bw() + #base theme
+  
+  theme(panel.background = element_rect(fill = "azure"), #colors for background
+        panel.grid.major = element_line(color = "gray90"),  #colors for grid lines
+        panel.grid.minor = element_line(color = "gray90"),  #colors for grid lines
+        axis.title.x.top = element_text(color = "blue3", face = "bold", size = 12), #colors for sal x axis title  
+        axis.title.x.bottom = element_text(color = "red3", face = "bold",size = 12),  #colors for temp x axis title
+        axis.text.x.top = element_text(color = "blue3"),     #colors for sal x axis tick marks, etc.
+        axis.text.x.bottom = element_text(color = "red3"),  #colors for temp x axis tick marks, etc.
+        legend.position = "none", #get rid of legend, colors tell the whole story
+        plot.title = element_text(size = 20, face = "bold", margin = margin(b = 10))) + #plot title settings
+  
+  labs(y = "Depth (m)", #y axis - depth
+       title = "Mean Temperature and Salinity with Depth") #title for plot
+
+#notes on how this plot could be improved: 
+# -the ends of T and S data seem to be outliers, this data could be removed manually
+# -to visualize trends better, overlap these lines, make them semi-transparent to show trends that may be correlated with depth.
+# -add a couple more reference numbers on the axis
 
 
+########################################################
+
+
+#6
+
+## save plot ##
+
+ggsave(here("Week_05","output","vertical_T_S_plot.png"), width = 12, height = 8)
+
+
+## this concludes the script ##
 
