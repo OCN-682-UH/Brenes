@@ -1,0 +1,72 @@
+---
+title: "class_week_6b"
+author: "Brandon Brenes"
+date: "2024-10-05"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE,
+                      warning=FALSE)
+#how to save with r
+```
+
+#load libraries
+```{r setup_2}
+library(ggplot2)
+library(palmerpenguins)
+library(tidyverse)
+library(dplyr)
+library(here)
+library(kableExtra)
+```
+# Penguin plot
+```{r penguinplot, fig.asp=1.2, fig.align='center', warning=FALSE,message=FALSE, fig.cap= "This is a scatterplot on penguin data", dev="pdf"}
+
+plot1.0 <- ggplot(data = penguins,
+                  mapping = aes(
+                    x = bill_depth_mm,
+                    y = bill_length_mm,
+                    group = species,
+                    color = species))+
+  geom_point()+ 
+  geom_smooth(method = "lm")+ 
+  labs(x = "Bill Depth (mm)", y = "Bill Length (mm)")+ 
+  scale_x_continuous(breaks = c(14, 17, 21), # This adds breaks to your x axis
+                     labels = c("low", "medium", "high"))+
+  theme_classic()+
+  theme(axis.title = element_text(size = 22, color = "red"),
+        panel.background = element_rect(fill = "linen"))
+
+print(plot1.0)
+```
+# Table making
+
+| Time   | Session | Topic   |
+|:------|:-------:|---------:|
+| _left_ | _center_| _right_ |
+| 01:00  | 1       | Anatomy |
+| 01:50  |         | *Break* |
+| 02:00  | 2       | Tables  |
+| 02:45  |         | *Break* |
+
+
+# Tables with kable
+
+```{r table}
+penguins %>% 
+  group_by(species) %>% 
+  summarise(billmean = mean(bill_length_mm, na.rm = TRUE)) %>% 
+  kbl() %>% 
+  kable_classic()%>%
+  row_spec(2, bold = T, color = "white", background = "red") %>% 
+  kable_styling(full_width = FALSE)
+
+```
+  
+  

@@ -1,0 +1,206 @@
+---
+title: "Markdown HW for Week 6"
+author: "Brandon Brenes"
+date: "2024-10-05"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+    css: styles.css  #CSS file for custom styles
+    
+---  
+  
+____________
+  
+   
+   
+<br>
+     
+     
+     
+## **Description :**
+#### This markdown file is a homework assignment for OCN 682 to practice my skills in _Rmarkdown_. 
+
+#### We will be creating a clean, easy-to-read **Markdown** document that utilizes the chemical data from Maunalua. The data will be displayed below in three formats: 
+
+* Raw data
+* Table
+* Heatmap plot
+  
+<br>
+  
+## 1. Libraries
+#### These are the libraries being used to process this data:
+
+<br>
+
+```{r setup, message=FALSE}
+library(gt)
+library(here)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(shiny)
+library(tinytex)
+library(ggplot2)
+library(gtExtras)
+library(tidyverse)
+library(kableExtra)
+library(wesanderson)
+```
+
+<br>
+
+## 2. Raw Data
+#### We'll now be looking at the **chemistry data from Maunalua**. The data was read in as a csv file using _read_csv()_. Here is a glimpse of the raw data:
+
+<br>
+
+```{r, echo=FALSE, message=FALSE}
+
+# read in data #
+
+chemical_data <- readr::read_csv("/Users/brenesb/Desktop/Repositories/Brenes/Week_06/data/chemicaldata_maunalua.csv")
+
+glimpse(chemical_data) #display
+ 
+heatmap_data <- chemical_data %>% #rename#convert from wide to long format for the heat map
+  select(Zone, Season, Phosphate, Silicate, NN) %>% #select for only these columns
+  pivot_longer(cols = c(Phosphate, Silicate, NN), #pivot to ease heatmap creation
+               #pivoted to long format to make heat map
+               names_to = "Nutrient", #names go to Nutrient column
+               values_to = "Concentration") #values are in concentration column
+```
+
+<br>
+
+## 3. Summary Table
+#### This is a table showing the **mean concentration (umol/l)** with **varying zones** and **seasons**. The data was grouped by zone, season and nutrients, then pivoted wider to make it more readible. I used the New York Times theme to give it a clean and simple look.
+
+<br>
+
+```{r summary, echo=FALSE, message=FALSE,fig.show='hold'}
+
+# summary table #
+
+summary_table <- heatmap_data %>%
+  group_by(Zone, Season, Nutrient) %>% #group by zone, season and nutrient
+  summarise(Mean_Concentration = mean(Concentration, na.rm = TRUE), .groups = 'drop') %>% #find average conc. of nutrients
+  drop_na() %>% #get rid of NAs
+  pivot_wider(names_from = Nutrient, values_from = Mean_Concentration) %>% #pivot to improve readbility 
+  rename('Nitrate + Nitrite (umol/l)' = NN) %>% #rename to include 'umol/L'
+  rename('Silicate (umol/l)' = Silicate) %>%
+  rename('PHOSPHATE (umol/l)' = Phosphate) %>%
+  gt() %>% #gt function used for NYT theme
+  gt_theme_nytimes() %>% #utilize NYT theme
+  tab_header(title = "Nutrients Across Space and Time") #title of table
+
+# display #
+summary_table
+
+# save table as png #
+gtsave(summary_table, here("Week_06","output", "summary_table.png"))
+
+```
+
+<br>
+
+## 4. Heatmap Nutrient Plots
+#### The raw data was pivoted longer to make it easier to plot a heatmap using _geom_tile()_ from ggplot.
+
+<br>
+
+```{r heatmap, echo=FALSE, message=FALSE, fig.show='hold'}
+
+# for silicate #
+
+silicate_map <- ggplot(heatmap_data %>%
+                         drop_na()%>%
+                         filter(Nutrient == "Silicate"), #filter for only silicate
+                       aes(x = Zone, y = Season, fill = Concentration)) +#set x and y to zone and season, fill will be conc. of the nutrient in umol/L
+  geom_tile() + #heatmap using geomtile
+  scale_fill_gradientn(colors = colorRampPalette(c("white", "blue"))(100), na.value = "grey50") +
+  labs(title = "Silicate", fill = "umol/L") +#title for plot and legend
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),  #remove ugly grid lines that show up on plot
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(size = 16, face = "bold"), #adjust size and bold of all titles
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    
+  )
+
+# display #
+print(silicate_map)
+
+# save plot #
+ggsave(here("Week_06","output","silicate_plot.png"), width = 12, height = 8)
+```
+
+<br>
+
+```{r heatmap2, echo=FALSE, message=FALSE, fig.show='hold'}
+
+# for nitrate + nitrite #
+
+nn_map <- ggplot(heatmap_data %>%
+                   drop_na()%>%
+                   filter(Nutrient == "NN"), #filter for only NN
+                 aes(x = Zone, y = Season, fill = Concentration)) +#set x and y to zone and season, fill will be conc. of the nutrient in umol/L
+  geom_tile() + #heatmap using geomtile
+  scale_fill_gradientn(colors = colorRampPalette(c("white", "red"))(100), na.value = "grey50") +
+  labs(title = "Nitrate + Nitrite", fill = "umol/L") + #title for plot and legend
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),  #remove ugly grid lines that show up on plot
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(size = 16, face = "bold"), #adjust size and bold of all titles
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12)
+  )
+
+# display #
+print(nn_map)
+
+# save plot #
+ggsave(here("Week_06","output","nn_plot.png"), width = 12, height = 8)
+```
+
+<br>
+
+```{r heatmap3, echo=FALSE, message=FALSE, fig.show='hold'}
+
+# for phosphate #
+
+phosphate_map <- ggplot(heatmap_data %>% 
+                          drop_na()%>%
+                          filter(Nutrient == "Phosphate"), #filter for only phosphate
+                         aes(x = Zone, y = Season, fill = Concentration)) + #set x and y to zone and season, fill will be conc. of the nutrient in umol/L
+  geom_tile() + #heatmap using geomtile
+  scale_fill_gradientn(colors = colorRampPalette(c("white", "green"))(100), na.value = "grey50") +
+  labs(title = "Phosphate", fill = "umol/L") + #title for plot and legend
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),  #remove ugly grid lines that show up on plot
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(size = 16, face = "bold"), #adjust size and bold of all titles
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12)
+  )
+
+# display #
+print(phosphate_map)
+
+# save plot #
+ggsave(here("Week_06","output","phosphate_plot.png"), width = 12, height = 8)
+```
+
+<br>
+
+###### last updated: 2024/10/06

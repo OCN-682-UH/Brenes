@@ -1,0 +1,61 @@
+---
+
+title: "week6a"
+author: "Brandon Brenes"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: darkly
+---
+# General Notes #
+
+hit space bar twice and then return to make a new line
+
+Add R chucks, chunks of area for Rcoding by hitting the "+C" above and hitting R or by typing...
+
+```{r setup, include=FALSE}
+```
+
+
+There are 'chunk options': getting rid of warnings, add a caption to graphical resutls, etc. Include= false 
+means no code will show up
+
+```{r setup, include=FALSE, echo = TRUE, message = FALSE, warning = FALSE}
+```
+
+# Intro to Penguins:
+
+Today we are going to work with **penguin data** in _Markdown_
+
+# load libraries:
+```{r setup, include=FALSE}
+
+library(palmerpenguins)
+library(tidyverse)
+library(here)
+```
+
+# inspect the data:
+```{r}
+glimpse(penguins)
+```
+
+# make a plot
+```{r}
+plot1<-ggplot(data = penguins, 
+              mapping = aes(x = bill_depth_mm, 
+                            y = bill_length_mm,
+                            group = species,
+                            color = species)) +
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  labs(x = "Bill Depth (mm)", y = "Bill Length (mm)") + 
+  scale_x_continuous(breaks = c(14, 17, 21), #this adds breaks to your x axes
+                     labels = c("low", "medium", "high"))+
+  theme_classic() +
+  theme(axis.title = element_text(size = 22, color = "red"),
+        panel.background = element_rect(fill = "linen"))
+```
+
