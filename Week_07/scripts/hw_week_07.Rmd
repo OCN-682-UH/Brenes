@@ -1,0 +1,127 @@
+---
+title: "HW Week 7"
+author: "Brandon Brenes"
+date: "2024-10-10"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+---
+
+<br>
+
+## **Description**
+For today's homework, I will attempt to create a map showing the distribution of meteors in the US. This map will also display the relative mass of the meteor that struck in that particular region. To do so, we will be using the _mapdata_ (later converted into _states and USA map data_) and _meteor data_ coupled with the **geom_polygon()** and **geom_point()** functions.
+
+<br>
+
+### 1. Libraries
+
+We won't get too far without libraries, so let's load some! Here are the ones we'll be using to create these maps:
+
+```{r setup, include=TRUE, message=FALSE}
+
+## libraries ##
+
+library(tidyverse)
+library(here)
+library(maps)
+library(mapdata)
+library(mapproj)
+library(readr)
+
+```
+
+<br>
+
+### 2. Data
+The data sets being used involve longitude and latitude coordinates. The _USA data_ outlines the United States mainland and the _States data_ has longitude and latitude data for each of the states on the mainland. The meteorite data shows the longitude and latitude location of where they landed and the mass of each of those meteors.
+
+```{r, message=FALSE}
+
+## load data ##
+
+
+# USA map data & states data
+
+USA<-map_data("usa") #of the map_data use the USA data
+states <- map_data("state") #of the map_data use the state data
+
+# meteorite data
+
+meteorites <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-11/meteorites.csv")
+
+#restrict meteorite data to within USA
+
+meteorites <- meteorites[meteorites$long >= -125 & meteorites$long <= -66 &
+                          meteorites$lat >= 24 & meteorites$lat <= 50, ]
+
+```
+
+<br>
+
+#### Take a peek of the data...
+
+**USA data:**
+
+```{r, message=FALSE}
+# view data #
+glimpse(USA)
+```
+
+**States data:**
+
+```{r, message=FALSE}
+# view data #
+glimpse(states)
+```
+
+**Meteor data:**
+
+```{r, message=FALSE}
+# view data #
+glimpse(meteorites)
+```
+
+<br>
+
+### 3. Meteor map
+To create this map we will be using the _USA data_ superimposed with the _States data_ using the **geom_polygon()** function. I then used the **scale_size_continuous** and **labs()** function to express the relationship between the size of the point and the mass of the meteor.
+
+```{r, message=FALSE, warning=FALSE, fig.width=12, fig.height=8}
+ggplot() +
+  geom_polygon(data = USA, #using the USA lat/long data and geom_polygon function to create shape of USA
+               aes(x = long, y = lat, group = group), #assign x-y to lat and long
+               fill = "seagreen", color = "black") + #fill the USA mainland outline with color and outline with black
+  geom_polygon(data = states, #use state lat/long data
+               aes(x = long, y = lat, group = group), #assign x-y to lat and long
+               fill = NA, color = "black") + #outline states in black
+  theme_light() + #light theme
+  coord_map(projection = "mercator") + #use mercator style for mapping
+  theme_void() + #get rid of axis for lat and long
+  theme(panel.background = element_rect(fill = "lightblue3"))+ #fill outside background with blue
+  geom_point(data = meteorites, #using geom_point 
+             aes(x = long, y = lat, size = mass))+ #assign x-y to lat and long, size of point associated by mass
+   scale_size_continuous( #scale_size_continuous() legend customization 
+    name = "Meteor Mass (kg)", #title legend            
+    breaks = c(1e4, 1e6, 1e7), #add three breaks
+    range = c(1, 10) #range the size of points
+  ) +
+  labs(title = "Meteor Impacts in the United States (mainland)", size = "Meteor Mass (kg)")+ #titles
+  theme(plot.title = element_text(hjust = 0.5, size = 22, face = "bold", margin = margin(b = 20)),
+                                  plot.margin = margin(t = 10, r = 10, b = 10, l = 50), #add margins 
+legend.title = element_text(size = 14, face = "bold"), #legend title characters
+    legend.text = element_text(size = 12), #size subtitle characters
+    legend.key.size = unit(1.5, 'cm')
+  )
+
+```
+
+```{r, include=FALSE}
+ggsave(here("Week_07","output","meteor_USA_map.pdf"), width = 12, height = 8)
+```
+
+
+
