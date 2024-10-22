@@ -14,6 +14,7 @@ library(mapdata)
 library(mapproj)
 library(readr)
 library(ggdogs)
+library(ggmap)
 
 ############################################################################################
 

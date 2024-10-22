@@ -1,0 +1,211 @@
+---
+title: "Class 8b"
+author: "Brandon Brenes"
+date: "2024-10-22"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: darkly
+---
+
+<br>
+
+## Outline of class
+
+#### Advanced plotting:
+- {patchwork} - bringing plots together
+- {ggrepel} - repel your labels on your plots
+- {gganimate} - add some animations to yourplots
+- {magick} - photo processing
+    
+<br>
+    
+#### Load libraries
+```{r, message=FALSE,warning=FALSE}
+#libraries
+library(tidyverse)
+library(here)
+library(patchwork)
+library(ggrepel)
+library(gganimate)
+library(magick)
+library(palmerpenguins)
+```
+
+<br>
+
+### patchwork
+Easily brings the plots together with simple code, cal plot and gggrid also does this but patchwork is the easiest
+
+<br>
+
+#### How to use patchwork...
+
+##### Plots being used:
+```{r,message=FALSE,warning=FALSE}
+
+# plot 1
+p1<-penguins %>%
+  ggplot(aes(x = body_mass_g, 
+             y = bill_length_mm, 
+             color = species))+
+  geom_point()
+p1
+
+```
+
+```{r,message=FALSE,warning=FALSE}
+
+# plot 2
+p2<-penguins %>%
+  ggplot(aes(x = sex, 
+             y = body_mass_g, 
+             color = species))+
+  geom_jitter(width = 0.2)
+p2
+
+```
+
+<br>
+
+#### Sticking plots together...
+
+```{r,message=FALSE,warning=FALSE}
+#use patchwork to add the plots together
+
+p1+p2
+#wow that actually worked!
+
+```
+<br>
+
+#### Stack them ontop and label them...
+```{r,message=FALSE,warning=FALSE}
+p1/p2 +#stack on top
+  plot_layout(guides = 'collect')+ #legend labels
+  plot_annotation(tag_levels = 'A') #capital letters tagged
+
+```
+
+
+<br>
+
+### ggrepel
+
+We are using mtcars preloaded data set
+
+```{r,message=FALSE,warning=FALSE}
+ 
+
+ggplot(mtcars, aes(x = wt, 
+                   y = mpg, 
+                   label = rownames(mtcars)))+ #label them as whatever the row name is ex) cadillac
+  geom_text_repel() + # repel the labels to see all of them, makes easier to read
+  geom_point(color = 'red')
+
+#instead of 'geom_text_repel' you could use 'geom_label_repel' for a different look
+
+```
+
+
+<br>
+
+### gganimate
+Useful when not distracting. Create animations like gifs.
+
+##### you can show a transtiion between two states:
+```{r,message=FALSE,warning=FALSE}
+penguins %>%
+ggplot(aes(x = body_mass_g, 
+            y = bill_depth_mm, 
+            color = species)) +
+  geom_point() +
+  transition_states(
+     year, # what are we animating by
+     transition_length = 2, #The relative length of the transition.
+     state_length = 1 # The length of the pause between transitions
+   )+
+  ease_aes("sine-in-out") + #so many different animation styles ex) bounce-in-out
+  labs(title = 'Year: {closest_state}')
+  
+  #add label to see what year it is, it reports the closest state, in this case state=year. must use brackets
+  
+# save animation #
+#anim_save(here("Week_08","output","mypengiungif.gif"))
+```
+
+
+<br>
+
+### magick
+Advanced image processing. Helpful if you need to convert photos to gray scale, binary for an analysis, manipulate them in anyway, or putting images on top of your plots!
+
+<br>
+
+#### example:
+```{r,message=FALSE,warning=FALSE}
+penguin<-image_read("https://pngimg.com/uploads/penguin/pinguin_PNG9.png")#image_read reads the image in
+#you can do if it it's on your desktop or output folder, use file path used in ggsave
+penguin
+```
+
+<br>
+
+```{r, include=FALSE}
+penguins %>% #use this plot as an example
+ggplot(aes(x = body_mass_g, 
+            y = bill_depth_mm, 
+            color = species)) +
+  geom_point()  #ggsave(here("Week_08","output","penguinplot.png"))
+```
+
+<br>
+
+#### Penguin cartoon on top of plot
+
+```{r,message=FALSE,warning=FALSE}
+#whatever you want to use as the background you would 'read in' first.
+
+#penguin plot will be first since we used image_read...
+penplot<-image_read(here("Week_08","output","penguinplot.png"))
+#cartoon penguin ontop, using image_compos()
+out <- image_composite(penplot, penguin, offset = "+70+30")
+
+out #view
+
+```
+
+<br>
+
+#### Penguin gif on top of plot
+
+```{r,message=FALSE,warning=FALSE}
+
+# read in a penguin gif first #
+
+pengif<-image_read("https://media3.giphy.com/media/H4uE6w9G1uK4M/giphy.gif")
+
+
+# how to display gif on plot #
+
+outgif <- image_composite(penplot, pengif, gravity = "center")
+
+#penplot first then pengif
+#gravity = center puts it right in middle of plot
+#image_composite() on penplot
+
+
+# extra step using image_animate #
+
+animation <- image_animate(outgif, fps = 10, optimize = TRUE)
+#low fps to save space, optimized it to smoothin it
+#customize the gif settings
+
+## save animation by using anim_save(here("Week_08","output","mypengiunplotgif.gif"))
+
+# view #
+animation
+
+```
+
