@@ -1,0 +1,187 @@
+---
+title: "class_9a"
+author: "Brandon Brenes"
+date: "2024-10-22"
+output: html_document
+---
+
+##Functions! 
+Today we're working on functions. Why use functions?
+-Anytime you have a task that you want to use more than once
+-Keeps your script clean
+-Avoids mistakes with copy and paste
+-Minimizes places where you need to update your code
+```{r,message=FALSE,warning=FALSE}
+
+#libraries
+
+library(tidyverse)
+library(palmerpenguins)
+library(PNWColors)
+library(ggplot2)
+```
+
+
+```{r,message=FALSE,warning=FALSE}
+
+#First set-up your script and create a dataframe of random numbers
+
+df <- tibble(
+  a = rnorm(10), # draws 10 random values from a normal distribution
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+head(df)
+
+#Anytime you have to do a task more then once... Let's use an example where we want to rescale data in multiple columns (value - min/(max - min))...
+
+#mutating preexisting column to make rescaled and  copy and paste the same code for each column without making any mistakes
+
+df<-df %>% 
+  mutate(a = (a-min(a, na.rm = TRUE))/(max(a, na.rm = TRUE)-min(a, na.rm = TRUE)),
+         b = (b-min(b, na.rm = TRUE))/(max(b, na.rm = TRUE)-min(b, na.rm = TRUE)),
+         c = (c-min(c, na.rm = TRUE))/(max(c, na.rm = TRUE)-min(c, na.rm = TRUE)),
+         d = (d-min(d, na.rm = TRUE))/(max(d, na.rm = TRUE)-min(d, na.rm = TRUE)))
+
+head(df)
+
+#but copy and pasting can create problems and there may be typos so....
+
+#we can write a function for this!
+```
+
+```{r,message=FALSE,warning=FALSE}
+
+#ta da...our rescale function using the x as the input and using function() to create a function names rescale01
+
+rescale01 <- function(x) {
+  value<-(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
+  return(value)
+}
+
+#now use the clean function - rescale01 - and instead of x we're using our real input values
+
+df %>%
+  mutate(a = rescale01(a),
+         b = rescale01(b),
+         c = rescale01(c),
+         d = rescale01(d))
+
+#letters are the column names
+
+```
+###There are three key steps to creating a new function:
+
+    -You need to pick a name for the function. Here I’ve used rescale01 because this function rescales a vector to lie between 0 and 1.
+
+    -You list the inputs, or arguments, to the function inside function. Here we have just one argument. If we had more the call would look like function(x, y, z).
+
+    -You place the code you have developed in body of the function, a { block that immediately follows function(...).
+
+    return tells us what values we want returned when you run the function
+```{r,message=FALSE,warning=FALSE}
+rescale01 <- function(x) {
+  value<-(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
+  return(value)
+}
+```
+
+Note: It is way easier to create a function when you already wrote the code rather than creating the function from scratch
+
+```{r,message=FALSE,warning=FALSE}
+
+farenheit_to_celsius<- function(temp_F) {
+  temp_C <- (temp_F - 32) * 5 / 9
+return(temp_C)}
+
+
+celsius_to_kelvin <- function(temp_C) {
+  temp_K<-temp_C + 273.15
+return(temp_K)}
+
+#yay we made our first function!
+```
+
+
+```{r,message=FALSE,warning=FALSE}
+#Making plots into a function
+
+#Let's say you have a specifically formatted plot that you like and that you plan to use over and over again. By turning it into a function, you only have to code it once.
+
+#Let's use our favorite penguin dataset and make a nice plot line plot.
+
+pal<-pnw_palette("Lake",3, type = "discrete") 
+#my color palette, choose three colors from 'lake', type= discrete means no gradients, relatively different colors.
+
+#the bones of the plot...
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm, color = island))+#groups colored by island
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+  # use pretty colors and another example of how to manually change the legend title for colors
+  theme_bw()
+
+```
+
+We know that this works but we can expedite the process. Lets use our function...
+```{r, message=FALSE,warning=FALSE}
+
+#specify data is using x and y as the argument
+#the function for ggplot needs something to recognize that its a column within that dataset
+#use defaults, have the penguins also be the data frame its pulling from
+
+myplot<-function(data = penguins, x, y) {
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+
+myplot(x = body_mass_g, y = flipper_length_mm)
+
+```
+
+Imagine you want a variable to be equal to a certain value if a condition is met. This is a typical problem that requires the if ... else ... construct. For instance:
+```{r,message=FALSE,warning=FALSE}
+a <- 4
+b <- 5
+#Suppose that if a > b then f should be = to 20, else f should be equal to 10. Using if/else we:
+if (a > b) { # my question
+  f <- 20 # if it is true give me answer 1
+    } else { # else give me answer 2
+  f <- 10
+}
+
+f
+
+```
+Now lets apply this 'if-else' to our plot
+```{r,message=FALSE,warning=FALSE}
+
+
+myplot<-function(data = penguins, x, y, lines=TRUE ){ # add new argument for lines
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+
+if(lines==TRUE){
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+else{
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+}
+
+myplot(x = body_mass_g, y = flipper_length_mm)
+
+```
+
