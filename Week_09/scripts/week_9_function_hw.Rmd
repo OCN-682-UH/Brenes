@@ -1,0 +1,237 @@
+---
+title: "Week 9 Function HW"
+author: "Brandon Brenes"
+date: "2024-10-29"
+output: 
+  html_document: 
+    toc: TRUE
+    toc_float: TRUE 
+---
+
+## Description:
+
+I will be using the *diamonds* data package from ggplot to create some functions that may help you decide on which diamond ring you will get and how to save for said ring!
+
+
+The manual run examples explicitly show the inner workings of the function whereas the function run examples show how the function is supposed to work.
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  echo = TRUE,     # display code
+  message = FALSE, # don't show messages
+  warning = FALSE  # don't show warnings
+)
+
+```
+
+## Libraries
+
+```{r}
+
+# libraries #
+library(ggplot2)
+library(beepr)
+library(dplyr)
+```
+
+## Data
+
+Diamonds data package comes with ggplot package...
+
+```{r}
+
+# ggplot already had this data set so we just need to name it and store it in environment
+data("diamonds")
+
+# display #
+head(diamonds)
+
+```
+
+<br>
+
+## Diamond Determiner
+
+We are going to be making a function that tells you the largest carat ring you can buy given your budget and preferred cut!
+
+```{r}
+
+# given your budget and preferred cut, whats the largest carat ring you can buy, what are your diamond options? :)
+
+# use the diamond suggestion function #
+diamond_determiner <- function(salary_per_paycheck, preferred_cut) {
+  
+# calculate the budget for the diamond ring using right hand rule! "3 times what you make per paycheck"
+  
+  budget <- salary_per_paycheck * 3
+  
+  # filter the diamonds dataset to find diamonds within the budget
+  affordable_diamonds <- diamonds[diamonds$price <= budget, ]
+  
+  # check if there are any diamonds within the budget...because if not the you get this return
+  if (nrow(affordable_diamonds) == 0) {
+    return("No diamonds are available within your budget.")
+  }
+  
+  # filter diamonds based on the preferred cut
+  affordable_diamonds <- affordable_diamonds[affordable_diamonds$cut == preferred_cut, ]
+  
+  # check if there are any diamonds within the budget...because if not the you get this return
+  if (nrow(affordable_diamonds) == 0) {
+    return("No diamonds match your preferred cut within your budget.")
+  }
+  
+  # find the maximum carat weight within the budget and preferred cut
+  max_carat <- max(affordable_diamonds$carat)
+  
+  # get details about the diamond at the maximum carat weight
+  recommended_diamond <- affordable_diamonds[affordable_diamonds$carat == max_carat, ]
+  
+  return(recommended_diamond)
+}
+
+# use function to print and play sound
+print_and_beep <- function(diamond_info) {
+  print(diamond_info)  # print the diamond information
+  beep(1)              # play the kaching sound
+}
+
+```
+
+<br>
+
+### Instructions
+
+Input your *salary_per_paycheck (*whole dollar amount) and *preferred_cut* (Good, Very Good, Premium, Ideal). Into the \*\*diamond_determiner() function\*\* then run it to see what your recommended options are!
+
+<br>
+
+### Example one (manual run)
+
+In this example, I will show how this is useful if you want to maximize your type of cut but only have a small budget of 200 dollars...
+
+```{r}
+
+## YOUR INPUT ##
+
+salary_per_paycheck <- 500 # change this value based on user input
+preferred_cut <- "Ideal"      # change this value based on user preference
+
+
+## use suggested diamond function ##
+recommended_diamond <- diamond_determiner(salary_per_paycheck, preferred_cut)
+  
+```
+
+**Well it's the thought that counts, not the size of the ring...**
+
+<br>
+
+### Example two (function run)
+
+In this example, I will show how this is useful if you want to maximize your diamond size and sacrifice the quality of the cut...
+
+```{r}
+
+## YOUR INPUT ##
+diamond_determiner(500,"Good")
+
+```
+
+<br>
+
+So maybe your mind is already made up and you just HAVE to get them that *Ideal cut 3.5 carat diamond* which you just determined (using your **Diamond Determiner function**) that the ring is gonna be north of \$12,000 dollars! If only you had a function that could tell you how much to save...
+
+<br>
+
+## Money Motivator
+
+Given the price of our desired diamond, how much we get payed and how much of that we save, **how many paychecks do we need to acquire in order to buy that diamond?**
+
+```{r}
+
+# money motivator function being made...
+
+# given the price of our desired diamond, how much we get payed and how much of that we save, how many paychecks do we need to save in order to buy that diamond
+
+money_motivator <- function(diamond_price, salary_per_paycheck, savings_per_paycheck) {
+  #use these three inputs
+  
+  # to the nearest whole number, how many paychecks we need to save for the diamond of some price?
+  paychecks_needed <- ceiling(diamond_price / savings_per_paycheck)
+  
+  # created a data frame to track our savings over time
+  savings_data <- data.frame(
+    Paycheck = 1:paychecks_needed,
+    Total_Savings = seq(savings_per_paycheck, by = savings_per_paycheck, length.out = paychecks_needed)
+  )
+  
+  # display the number of paychecks needed
+cat("You need to save for", paychecks_needed, "paychecks to afford the diamond.\n")
+
+  # plot projected savings using geom_line
+  
+  p <- ggplot(savings_data, aes(x = Paycheck, y = Total_Savings)) +
+    geom_line(color = "green3", size = 1) +
+    geom_point() +
+    labs(title = paste("Savings Projection to Afford a Diamond ($", diamond_price, ")", sep = ""),
+         x = "Paycheck Number",
+         y = "Total Savings ($US)") +
+    geom_hline(yintercept = diamond_price, linetype = "dashed", color = "gold") +
+    theme_minimal()+
+    theme(plot.title = element_text(face = "bold"))
+  
+  # print the plot
+  print(p)
+  
+  # Return the number of paychecks needed
+  return( paychecks_needed)
+
+}
+```
+
+<br>
+
+### Instructions
+
+Use the money_motivator(diamond_price, salary_per_paycheck, savings_per_paycheck) function to figure out how many paychecks you have to acquire!
+
+### Example one (manual run)
+
+```{r}
+# input #
+diamond_price <- 5000        # set the price of the diamond desired (whole dollar amount)
+salary_per_paycheck <- 1000   # salary per paycheck (whole dollar amount)
+savings_per_paycheck <- 200    # how much do you want to save per paycheck?
+
+beep(2)
+
+# output #
+paychecks_needed <- money_motivator(diamond_price, salary_per_paycheck, savings_per_paycheck)
+
+
+```
+
+<br>
+
+
+**Twenty five paychecks?! I don't have that kind of time! How else can we speed this up?**
+
+<br>
+
+### Example two (function run)
+
+Lets say instead we are in a crunch for time and need this diamond yesterday. We decide to save 100% of our paycheck and live off of spam musubis for the next few paychecks. Using our **money_motivator** function, we can determine how many paychecks we need when saving 100% of a \$1000 paycheck to save for a \$12000 ring...
+
+```{r}
+
+#To get number of paychecks needed, use money_motivator function and respective inputs...
+
+#paychecks_needed <- money_motivator(diamond_price, salary_per_paycheck, savings_per_paycheck)
+
+money_motivator(12000,1000,1000) #saving 100% of a $1000 paycheck to save for a $12000 ring
+
+```
+
+**Depending on your situation, you can adjust these parameters to fit your scenario to give you a good estimated time you'll need to acquire the money needed!**

@@ -17,10 +17,10 @@ editor_options:
 ## Description:
 
 In this document, we will be providing code and comments on the making
-of a **HOT plot** (good plot) and a **not so HOT plot** (bad plot). Both plots are using 20
-years worth of low level nitrogen concentration data and picoeukayrote
-FCM data collected by the Hawaii Ocean Time-series (HOT) from Station
-ALOHA.
+of a **HOT plot** (good plot) and a **not so HOT plot** (bad plot). Both
+plots are using 20 years worth of low level nitrogen concentration data
+and picoeukayrote FCM data collected by the Hawaii Ocean Time-series
+(HOT) from Station ALOHA.
 
 Prior to plotting this data will be processed to averaged
 depth-integrated data from depths 0-175m for each month at Station
