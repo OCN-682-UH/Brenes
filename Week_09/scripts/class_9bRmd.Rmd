@@ -1,0 +1,149 @@
+---
+title: "Class_9b"
+author: "Brandon Brenes"
+date: "2024-10-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(# set chunk options
+  echo = TRUE,         # show code
+  message = FALSE,     #dont show messages
+  warning = FALSE)    #dont include warnings
+
+```
+
+### Libraries
+
+```{r}
+
+## libraries ##
+library(tidyverse)
+library(here)
+library(forcats)
+
+```
+
+## Data
+
+```{r}
+#tuesdata <- tidytuesdayR::tt_load(2021, week = 7)
+#income_mean<-tuesdata$income_mean
+income_mean <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-02-09/income_mean.csv')
+```
+
+**What is a factor?**
+
+**A factor is a specialized version of a character. It is how we truly store categorical data.** The values that a factor takes are called levels. These levels allow you to order your data in specific ways. The default levels are always alphabetical. So, we need to learn how to use factors appropriately and reorder them to be specific to our analyses.
+
+Importantly, once you convert a character into a factor, R is actually storing them as integers (i.e., 1,2,3,4...). If you are not careful this can lead to a lot of headache... but, this is how you can put your characters in a specific order.
+
+To make something a factor you put the vector in the function factor()
+
+```{r}
+fruits<-factor(c("Apple", "Grape", "Banana"))
+fruits
+```
+
+When can this be scary...
+
+Let's say you had a typo in a column of what was suppose to be numbers. R will read everything in as characters. If they are characters and you try to covert it to a number, the rows with real characters will covert to NAs 
+
+```{r}
+
+test<-c("A", "1", "2")
+as.numeric(test) #
+
+test<-factor(test) 
+
+as.numeric(test)
+```
+
+```         
+## [1] 3 1 2
+```
+
+Covert to factor, stores everything as an integer in the background, important only for categorically data.
+
+These types of factor booby-traps are why there was a big push to remove the automatic import of strings as factors. If you read in your data as **read.csv()** then all your strings will be automatically read in as factors, if you use **read_csv()** strings will be read as characters.
+
+
+```{r}
+star_counts<-starwars %>%
+  filter(!is.na(species)) %>%
+  mutate(species = fct_lump(species, n = 3)) %>%
+  count(species)
+
+head(star_counts)
+```
+starwars
+
+There are 38 unique species, but most are really rare. Let's say we wanted to lump all the species together that had less than 3 individuals. We could use fct_lump() which converts the data into a factor and lumps it together
+
+```{r}
+star_counts<-starwars %>%
+  filter(!is.na(species)) %>%
+  mutate(species = fct_lump(species, n = 3)) %>%
+  count(species)
+
+head(star_counts)
+#Notice the order is not in alphabetical order because it is now a factor
+#important to do this because now you have 'others' as a category
+
+```
+```{r}
+star_counts %>%#in order of species counts(n); n= values
+  ggplot(aes(x = fct_reorder(species, n, .desc = TRUE), y = n))+ # reorder the factor of species by n
+  geom_col() +
+  labs(x = "Species") 
+```
+
+reordering line plots
+
+Let's say you wanted to make a line plot and reorder the legend to match the order of the lines. We will use the income_mean dataset to illustrate this.
+
+```{r}
+glimpse(income_mean)
+
+total_income<-income_mean %>%
+  group_by(year, income_quintile)%>%
+  summarise(income_dollars_sum = sum(income_dollars))%>%
+  mutate(income_quintile = factor(income_quintile)) # make it a factor
+
+glimpse(total_income)
+
+#first is taking the income quintile then it's ordering it by year and second is income sum, color is by income quintile.
+total_income%>%
+  ggplot(aes(x = year, y = income_dollars_sum, 
+             color = fct_reorder2(income_quintile,year,income_dollars_sum)))+
+  geom_line()+
+  labs(color = "income quantile")
+
+glimpse(total_income)
+```
+```{r}
+
+#manually order it...
+
+#This order is probably not what we want... You can set the specific order of the levels
+x1 <- factor(c("Jan", "Mar", "Apr", "Dec"))
+x1
+
+x1 <- factor(c("Jan", "Mar", "Apr", "Dec"), levels = c("Jan", "Mar", "Apr", "Dec"))
+x1
+```
+
+```{r}
+starwars_clean<-starwars %>% 
+  filter(!is.na(species)) %>% # remove the NAs
+  count(species, sort = TRUE) %>%
+  mutate(species = factor(species)) %>% # make species a factor 
+  filter(n>3)  %>% # only keep species that have more than 3 
+  droplevels() %>% # drop extra levels (always add droplevels() or fct_drop() at the end of factor manipulation)
+  mutate(species = fct_recode(species, "Humanoid" = "Human")) 
+#recode/rename human to humanoid any factors using fct_recode
+
+starwars_clean
+```
+

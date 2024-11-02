@@ -32,6 +32,7 @@ knitr::opts_chunk$set(# set chunk options
   echo = TRUE,         # show code
   message = FALSE,     #dont show messages
   warning = FALSE)    #dont include warnings
+
 ```
 
 ## Libraries
