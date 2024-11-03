@@ -1,0 +1,169 @@
+---
+title: "Intertidal HW"
+author: "Brandon Brenes"
+date: "2024-11-02"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## HW Description
+
+*"Working with intertidal data. Today you will need to use skills that you have learned in working with words to clean up some issues with the character data and use what you learned today to reorder your factors into orders that make sense. (Also the column headers could be better...). HINT: New package idea to fix this is using the janitor package.*
+
+*Your goal, as per usual, is to make a plot, any plot where one of the axes is a factor. Save everything in the appropriate folders.*
+
+*You have two possible files to play with in the data folder (you don't HAVE to use both): intertidal.csv and intertidal_latitude.csv (as well as a data dictionary)*
+
+*Importantly, if you decide to visualize anything by tide height it should go from low to mid to high tide on the plot and if you decide to visualize by site it should go in order of latitude (e.g. south to north or north to south)."*
+
+<br>
+
+## Libraries
+
+```{r}
+# libraries #
+
+library(readr)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(janitor)
+library(ggplot2)
+
+```
+
+<br>
+
+## Load data
+
+```{r}
+
+# load data #
+
+raw_data <- read.csv("Week_09/data/intertidaldata.csv") %>% 
+  clean_names()
+
+head(raw_data)
+
+```
+
+<br>
+
+## Data manipulation
+
+We are going to manipulate the data using the \_forcats package\_ by making the site and quadrat column factors, reordering the quadrat levels, rearranging the data by levels, getting rid of near empty data column and pivotting the data to express species and percent cover in different columns.
+
+```{r}
+
+#forcats package by making the site and quadrat column factors
+
+# explicitly convert each character column to a factor
+
+raw_data$site <- factor(raw_data$site)
+raw_data$quadrat <- factor(raw_data$quadrat)
+
+
+
+# Reorder the data
+final_data <- raw_data %>%
+  mutate(
+    quadrat = factor(quadrat, levels = c("Low", "Mid", "High")) 
+    
+    # reordering the quadrat levels
+   
+  ) %>%
+  arrange(site, transect, quadrat) %>% #rearranging the data by levels
+  select(-c(whelks_counts, crabs_counts, stars_counts)) %>%
+  #get rid of columns with little to no data
+  mutate(barnacles = small_barnacles + large_barnacles + gooseneck_barnacles) %>% 
+  #combine barnacle data
+  select(-small_barnacles, -large_barnacles, -gooseneck_barnacles, -anemone) %>% 
+  #exclude these columns
+  pivot_longer( 
+    cols = c(bare_rock, algae, mussels, barnacles), 
+    #pivot them longer to make species and percent cover columns
+    names_to = "species",    #new column for the names of the counts
+    values_to = "percent_cover" #new column for the counts
+  ) %>% 
+  mutate(
+    species = factor(species)  #convert species column to factor
+  ) %>%
+  arrange(site, transect, quadrat, species) %>%  
+  #rearranging the data by levels of these variables
+  clean_names() 
+
+head(final_data)
+
+
+```
+
+<br>
+
+## Plot
+
+We're going to make a bar graph of the percent cover of specimen (algae, mussels, barnacles) in various tide conditions of Dana Point. First we are going to filter for only Dana Point site data then group by quadrat and species to find the mean percent cover of these species.
+
+Make data suitable for bar graph:
+
+```{r}
+
+summary_data <- final_data %>%
+  filter(site == "Dana Point") %>% #only Dana Point data
+  group_by(quadrat, species) %>% #group by quadrat and species
+  filter(!species %in% c("anemone", "bare_rock")) %>% #exclude these two, not enough data or not important
+  summarise(mean_percent_cover = mean(`percent_cover`, na.rm = TRUE)) %>% #mean percent cover for species 
+  ungroup() %>%  #ungroup to not mess up analysis down stream if necessary
+  drop_na() %>% # drop nas
+  mutate(species = recode(species, 
+                          "bare_rock" = "Bare Rock", 
+                          "algae" = "Algae", 
+                          "mussels" = "Mussels", 
+                          "barnacles" = "Barnacles")) 
+#rename columns to make plotting easier
+
+# display #
+summary_data
+```
+
+<br>
+
+### Bar Graph
+
+Code for plot:
+
+```{r}
+
+# Create the bar plot
+bar_plot<- ggplot(summary_data, aes(x = fct_relevel(quadrat, "Low", "Mid", "High"), #fct relevel to manually assign levels
+                         y = mean_percent_cover, fill = species)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_brewer(palette = "Set2",) +  # use a color palette to differentiate species
+  labs(x = "Tide", y = "Mean Percent Cover (%)", fill = "Taxa:", title = "Mean percent cover of species in various tidal zones") + #labels
+  theme_bw() + #bw themes, cleannnn
+  theme(
+    legend.position = "right",
+    legend.title = element_text(face = "bold", size = 10),  #bold legend title
+    legend.text = element_text(size = 10),
+    axis.text.x = element_text(face = "bold"), #bold
+    plot.margin = margin(20, 10, 20, 10),
+    axis.title = element_text(face = "bold", size = 15), #bold
+    axis.title.x = element_text(margin = margin(t = 20), size = 14),  #space above x-axis title
+    axis.title.y = element_text(margin = margin(r = 10), size = 14),  #space to the right of y-axis title
+    plot.title = element_text(margin = margin(b = 15), face = "bold",size = 18),
+    panel.grid.major.x = element_blank(),  #remove major horizontal grid lines
+    panel.grid.minor.x = element_blank()  #remove minor horizontal grid lines
+  )
+
+# Specify the file path
+output_file <- "/Users/brenesb/Desktop/Repositories/Brenes/Week_09/output/bargraph_percentcover.pdf"
+
+# Save the plot
+ggsave(filename = output_file, plot = bar_plot, width = 8, height = 6)
+```
