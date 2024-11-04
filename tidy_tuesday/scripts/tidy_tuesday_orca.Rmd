@@ -1,0 +1,159 @@
+---
+title: "Tidy Tuesday Orca"
+author: "Brandon Brenes"
+date: "2024-11-02"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    toc: true
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+```
+
+<br>
+
+# Description
+
+We will be looking to see if there is a seasonal variation in the encounter number at Haro Strait. To do this we will make a violin plot with season on the x axis and encounters on the y axis. The challenge for me will be to learn how to make seasonal data using their *date* variable. In addition to this, I will also be making a violin plot for the first time and utilize a new theme for rmarkdown and ggplot.
+
+<br>
+
+# Libraries
+
+```{r}
+
+# library #
+
+library(tidyr)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(cowplot)
+library(forcats)
+library(prettydoc)
+library(lubridate)
+
+```
+
+<br>
+
+# Load Data
+
+```{r}
+
+# load data from tidy tuesday orcas #
+
+raw_orcas <-read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-10-15/orcas.csv')
+
+head(raw_orcas)
+
+
+```
+
+<br>
+
+# Data manipulation
+
+**Clean up the data:**
+
+Select on the necessary columns, filter data that was collected in Haro Strait and create a season column using the dates (lubridate).
+
+```{r}
+
+# clean up raw data #
+
+# select out the columns we need (date, year and encounter) and only data in location Haro Strait, manipulate the data give seasons for dates.
+
+clean_orcas <- raw_orcas %>% 
+  filter(location == "Haro Strait") %>% #only data from Haro Strait
+  select(year, date, encounter_number) %>% #select out variables needed
+  mutate(
+    date = ymd(date),
+    season = case_when(#make month within these numbered months equal to this "season"
+      month(date) %in% 3:5  ~ "Spring",
+      month(date) %in% 6:8  ~ "Summer",
+      month(date) %in% 9:11 ~ "Fall",
+      TRUE                  ~ "Winter"
+    )
+  )
+
+head(clean_orcas)
+```
+
+<br>
+
+**Summary data for plot:**
+
+Find the difference between encounter numbers in each season because the number encounter number restarts every year.
+
+```{r}
+
+summary_orcas<-clean_orcas %>%
+ group_by(year, season) %>% #group by year and season
+  summarize(#subtract the min from the max for ecounter number for that years seasons.
+    min_encounter = min(encounter_number, na.rm = TRUE),
+    max_encounter = max(encounter_number, na.rm = TRUE),
+    encounter_diff = max_encounter - min_encounter
+  ) %>%
+  ungroup() %>% #ungroup just for safety reasons
+  drop_na() #drop na from dataset
+
+head(summary_orcas)
+
+```
+
+<br>
+
+# Plot
+
+Now we use the encounter diff as the number of encounters in that season and create a violin plot showing the seasonal variation in encounters:
+
+```{r}
+
+# violin plot of number of occurrences by season
+
+orca_plot<- ggplot(summary_orcas, aes(x = fct_relevel(season, "Spring", "Summer", "Fall", "Winter"), y = encounter_diff)) +#use fct_relevel so it puts seasons in order
+  geom_violin(aes(fill = season)) + #violin plot
+  labs(
+    x = "Season",
+    y =  "Number of Encounters",
+    title = "Orca Encounter Numbers by Season in Haro Strait",
+    fill = "Season"
+  ) +
+  theme_minimal_grid() + #new theme!
+  theme(
+    legend.position = "none",                # removes the legend
+    axis.title = element_text(face = "bold") # bold axis titles
+  )
+
+
+library(cowplot)
+
+orca_plot <- ggplot(summary_orcas, aes(x = fct_relevel(season, "Spring", "Summer", "Fall", "Winter"), y = encounter_diff)) +
+  geom_violin(aes(fill = season)) + 
+  labs(
+    x = "Season",
+    y =  "Number of Encounters",
+    title = "Orca Encounter Numbers by Season in Haro Strait",
+    fill = "Season"
+  ) +
+  theme_minimal_grid() +  # Start with theme_minimal_grid from cowplot
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),  # White background
+    plot.background = element_rect(fill = "white", color = NA),   # White background around plot
+    legend.position = "none",                                     # Removes the legend
+    axis.title = element_text(face = "bold")                      # Bold axis titles
+  )
+
+orca_plot
+
+```
+
+<br>
+
+# What did I learn?
+In this week's _tidy_tuesday_, I learned how to make seasons out of dates - a very useful tool when looking at time-series data. I also learned how to make a violin plot, which perfectly displayed the spread in values for these encounters over time. Lastly, I used different themes for the plot and the rmarkdown html file, both of which had to be installed.
