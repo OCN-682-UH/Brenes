@@ -1,0 +1,153 @@
+---
+title: "Tidy Tuesday Volcano"
+author: "Brandon Brenes"
+date: "2024-11-08"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme:
+      bootswatch: flatly
+    highlight: tango
+pdf_document:
+  toc: true
+  highlight: tango
+  latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Description
+
+We will be making a *geom_map* plot using *geom_polygo*n and *geom_point* displaying the **volcanoes in Indonesia**, the volcanoes **tectonic setting** and **elevation**.
+
+<br>
+
+## Libraries
+
+```{r}
+
+# libraries #
+
+library(here)
+library(maps)
+library(readr)
+library(dplyr)
+library(bslib)
+library(mapdata)
+library(mapproj)
+library(tidyverse)
+
+```
+
+<br>
+
+## Data
+
+### Load data
+
+The volcano data came from a *tiny_tuesday* repository named **Volcano Eruptions.** The world map data came from the **maps package**
+
+```{r}
+
+# load data #
+
+volcano <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/volcano.csv')
+
+world<-map_data("world")
+
+# display #
+head(world)
+
+# display #
+head(volcano)
+
+```
+
+<br>
+
+### Data manipulation
+
+First we will filter for Indonesia lat and long data and filter volcano data to only have a necessary variables and only Indonesia data.
+
+```{r}
+
+# world data manipulation #
+
+indonesia <- world %>% filter(region == "Indonesia") 
+#filter for only Indonesia data
+
+
+# volcano data manipulation #
+
+indonesia_volcano_subset <- volcano %>%
+  select(volcano_number, country, tectonic_settings, latitude, longitude, elevation) %>%
+  filter(country == "Indonesia")
+#filter for only Indonesia data and necessary columns
+
+
+# display #
+
+head(indonesia_volcano_subset)
+
+```
+
+<br>
+
+## Plot
+
+Using the *indonesia* with the **geom_polygon()** function and *indonesia_volcano_subset* data with the **geom_point** function overlay-ed, I created a map of volcanoes in Indonesia. I then used the **scale_size_continuous** and **labs()** function to express the relationship between the size of the point and the elevation of the volcano The color was filled using the tectonic setting as shown in the legend.
+
+```{r indonesia-volcano-plot, echo=TRUE, fig.width=20, fig.height=15, dpi=100}
+
+indonesia_volcano_plot <- ggplot() +
+    #plot the shape of Indonesia
+    geom_polygon(data = indonesia, 
+                 aes(x = long, y = lat, group = group),
+                 fill = "beige", color = "#BC8F8F") + #beige and brown
+ #add points for each volcano, with size based on elevation and color by tectonic_settings
+    geom_point(data = indonesia_volcano_subset, 
+               aes(x = longitude, y = latitude, size = elevation, color = tectonic_settings),
+               alpha = 0.5) + #add transparency for better visibility
+    #customize the size scale for elevation
+    scale_size_continuous(
+        name = "Elevation (m)", 
+        breaks = c(500, 1000, 3000), 
+        range = c(0.5, 4)  # increase the range for bigger points
+    ) +
+    #use a mercator projection
+    coord_map(projection = "mercator", xlim = c(95, 150), ylim = c(-15, 15)) +
+    theme_light()+
+    scale_color_brewer(name = "Tectonic Setting", palette = "Dark2")+
+    labs(title = "Volcanoes in Indonesia by Elevation and Tectonic Setting")+
+    #customize background color and layout
+  theme(
+        plot.title = element_text(face = "bold", hjust = 0.1, size = 35, margin = margin(b = 20)),  
+        #bold title, left aligned
+        plot.margin = margin(t = 10, r = 10, b = 10, l = 10),  
+        #add margin for spacing
+        panel.background = element_rect(fill = "lightblue2"),  
+        #set background of plot area
+        legend.background = element_blank(),  
+        #remove background from the legend area
+        legend.key = element_blank(),  
+        #make the legend keys (symbols) transparent
+        axis.text = element_blank(),  #remove axis labels and grid
+        axis.ticks = element_blank(),  
+        axis.title = element_blank(),  
+        panel.grid = element_blank(),  
+        legend.title = element_text(size = 20, face = "bold"), #legend title
+        legend.text = element_text(size = 20),#legend text
+        legend.spacing = unit(0.2, "cm"),  #reduce space between the legends
+        legend.box.spacing = unit(0.2, "cm")  #reduce space between legends
+    )
+
+indonesia_volcano_plot
+
+```
+
+## What did I learn?
+
+I learned how to make a ggmap displaying **two variables** using the color and the point size to represent different values. The colors display an interesting pattern showing the longitudinal change in tectonic setting. I am also using a color blind friendly pallet, which is something that I've been meaning to make a habit in my research analyses. I also used a new rmarkdown theme!
