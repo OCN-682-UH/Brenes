@@ -1,0 +1,144 @@
+---
+title: "Cetacean Tidy Tuesday"
+author: "Brandon Brenes"
+date: "2024-11-17"
+output:
+  html_document:
+    theme: journal
+    toc: true
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+```
+
+<br>
+
+# Description
+We are going to be working with data involving when, where and how various cetacean species were acquired by marine mammal captivity facilities. The end product will be a plot looking at acquisition types (born, rescued, captured) by species through time.
+
+<br>
+
+# Libraries and Load Data
+
+```{r}
+
+# library #
+
+library(tidyr)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(cowplot)
+library(forcats)
+library(prettydoc)
+library(lubridate)
+library(kableExtra)
+```
+
+
+
+```{r}
+
+# load data from tidy tuesday orcas #
+
+raw_cetacean <-read_csv('../data/allCetaceanData.csv')
+
+# display #
+head(raw_cetacean)
+
+```
+
+<br>
+
+# Data manipulation
+
+**Clean up the data:**
+
+We are going to select out the columns we need (date, species and acquisition type), make a year column and omit some of the redundancies in the species. This will streamline the counting and plotting process
+
+```{r}
+
+# clean up raw data #
+
+# select out the columns we need (date, species and acquisition type), make year column and correct redundant beluga and white sided dolphin data
+
+clean_cetacean <- raw_cetacean[c("originDate", "species", "acquisition")]%>% #date, species and acquisition type
+mutate(Year = year(originDate)) %>% #use lubridate to make year collumn
+    mutate(species = case_when(
+    species == "Beluga" ~ "Beluga Whale", 
+    #make the value beluga=beluga whale
+    species == "White-sided, Pacific" ~ "Pacific White-Sided",
+    TRUE ~ species
+   #make the value White-sided, Pacific=Pacific White-Sided
+  ))
+
+# display #
+head(clean_cetacean)
+
+```
+
+<br>
+
+**Summary data for plot:**
+
+Now lets count the number of times a cetacean was captured, born or rescued in order to end up in a captive cetacean facility.
+
+```{r}
+summary_cetacean <- clean_cetacean %>%
+  # just use year, acquisition and species, then drop 'born?' category
+  filter(!is.na(Year) & !is.na(acquisition) & acquisition != "born?") %>%  
+  # get rid of NAs in Year and acquisition, and filter by species
+  filter(species %in% c("Killer Whale; Orca", "Bottlenose", "Beluga Whale", "Pacific White-Sided") & acquisition %in% c("Born", "Capture")) %>% 
+  # group by year, species, and acquisition type
+  group_by(Year, species, acquisition) %>% 
+  # count the number of occurrences for each group
+  summarize(Count = n(), .groups = "drop")
+```
+
+# Summary Table
+
+```{r, echo=FALSE}
+# display #
+
+summary_cetacean %>%
+  head(6) %>%  # Limit to first 6 rows
+  kable()  # creates a simple table
+
+```
+
+<br>
+
+# Plot
+
+```{r}
+
+ggplot(summary_cetacean, aes(x = Year, y = Count, fill = acquisition)) +
+  geom_area(position = "stack") +
+  facet_wrap(~ species, scales = "free_y") +
+  labs(title = "Acquisition type by species through the years",
+       x = "Year",
+       y = "Number of occurrences",
+       fill = "Acquisition Type") +
+  scale_x_continuous(
+    breaks = seq(min(summary_cetacean$Year), max(summary_cetacean$Year), by = 10), 
+    labels = function(x) format(round(x, -1), nsmall = 0)  # round the years to nearest decade
+  ) +
+  scale_y_continuous(labels = function(x) format(round(x), nsmall = 0)) +  # y labels as integers (rounded)
+  scale_fill_manual(values = c("Born" = "#5BC0EB", "Capture" = "#E94E77")) +  # swap colors for 'born' and 'captured'
+  theme_light() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold", size = 16),  # larger plot title font size
+    axis.title = element_text(face = "bold")
+  )
+
+```
+
+<br>
+
+# What did I learn?
+
+In this week's *tidy_tuesday*, I learned **how to utilize a stacked line plot and** in this example it looks like it efficiently displays the transition in acquisition type from a capture dominate phase to a born dominant phase. In 1972, the Marine Mammal Protection Act was signed by President Richard Nixon which might explain this general trend but it seems like the transition took place specifically in the 90s. Another thing I learned in creating this *tidy_tuesday* was a **cleaner way to view a table in *markdown. using kable().***
