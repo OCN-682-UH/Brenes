@@ -29,6 +29,7 @@ We are going to be working with data involving when, where and how various cetac
 
 library(tidyr)
 library(dplyr)
+library(here)
 library(readr)
 library(ggplot2)
 library(cowplot)
@@ -44,7 +45,10 @@ library(kableExtra)
 
 # load data from tidy tuesday orcas #
 
-raw_cetacean <-read_csv('../data/allCetaceanData.csv')
+# install.packages('here') if not already installed
+
+raw_cetacean <- read_csv(here("tidy_tuesday","data", "allCetaceanData.csv"))
+
 
 # display #
 head(raw_cetacean)
