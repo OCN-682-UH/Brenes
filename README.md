@@ -2,7 +2,7 @@
 ###### Last updated: 2024.11.17
 ### **Purpose**: This repos will be used for OCN682: Data Science Fundamentals in R
 
-##NEWLY MADE APP: https://brenesb.shinyapps.io/coffee_app/
+## NEWLY MADE APP: https://brenesb.shinyapps.io/coffee_app/
 
 ### **Contents**:
 #### The _Week#_ folders indicate the week that the subfolders _Data_, _Output_,   _Images_ and _Scripts_ were produced for their respective assignmnets.
