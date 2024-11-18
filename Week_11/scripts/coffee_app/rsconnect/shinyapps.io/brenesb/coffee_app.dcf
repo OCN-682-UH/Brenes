@@ -1,0 +1,12 @@
+name: coffee_app
+title: coffee_app
+username: brenesb
+account: brenesb
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13367411
+bundleId: 9379123
+url: https://brenesb.shinyapps.io/coffee_app/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
