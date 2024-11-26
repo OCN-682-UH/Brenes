@@ -1,0 +1,157 @@
+---
+title: "Presidents Age Tidy Tuesday"
+author: "Brandon Brenes"
+date: "2024-11-25"
+output:
+  html_document:
+    theme: united
+    toc: true
+    toc_float: true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+```
+
+<br>
+
+# Description
+
+We are going to be making a box plot of the various president ages on the y axis and the various countries (US, UK and Japan) on the x axis. To improve readability, superimpose some jitter points on the plot.
+
+<br>
+
+# Libraries and Load Data
+
+```{r}
+
+# library #
+
+library(tidyr)
+library(dplyr)
+library(here)
+library(readr)
+library(ggsci)
+library(ggplot2)
+library(kableExtra)
+library(RColorBrewer)
+
+```
+
+```{r}
+
+# load data from tidy tuesday democracy data #
+
+raw_democracy <- read_csv(here("tidy_tuesday","data", "w13_democracy_data.csv"))
+
+# display #
+head(raw_democracy)
+
+```
+
+<br>
+
+# Data manipulation
+
+**Clean up the data**
+
+We are going to select out the columns we need (president_brithdyear, president_accession_year and country_name) then group by country_name.
+
+```{r}
+
+# clean up raw data #
+
+# select for president birthyear, acccesion year and country #
+
+clean_democracy <- raw_democracy %>% #filter/select out important variables 
+  select(president_birthyear, president_accesion_year, country_name) %>%
+  group_by(country_name) %>%  #group by country
+  drop_na() #drop nas
+
+clean_democracy %>% 
+  head(6) %>% 
+  kable() 
+
+```
+
+<br>
+
+**Summary data for plot**
+
+We will now make an age column by finding the difference of the two year variables. This will allow us to have a data set we can make an age vs. country box plot
+
+```{r}
+# summary data #
+
+# find the age of the president at the time he/she were elected #
+
+summary_democracy <- clean_democracy %>%
+  mutate(president_age = president_accesion_year - president_birthyear) %>% 
+   # calculate and add the president age
+  filter(country_name %in% c("Indonesia", "United States", "France")) %>%
+  group_by(country_name) # group by country for plot
+
+# display #
+summary_democracy %>% 
+  head(6) %>% 
+  kable() 
+
+```
+
+**Mean table**
+
+**Calculate mean to visualize data in table format**
+
+```{r}
+
+# calculate mean to visualize data in table format #
+
+# table mean data peak #
+mean_age_by_country <- summary_democracy %>%
+  group_by(country_name) %>%
+  summarise(mean_age = mean(president_age, na.rm = TRUE))
+
+# display #
+mean_age_by_country %>% 
+  head(6) %>% 
+  kable() 
+
+```
+
+<br>
+
+# Plot
+
+Using ggplot and their functions geom_boxplot and geom jitter, I made a boxplot showing the spread and median of president ages in the countries France, United States and Indonesia. I used a scientific color pallete, which I hadn't heard of before. Very clean and appealing look.
+
+```{r}
+
+# create the box plot and jittered individual points using ggplot geom_jitter and geom_boxplot #
+
+president_age_box_plot<-ggplot(summary_democracy, aes(x = country_name, y = president_age, fill = country_name)) +
+  geom_boxplot(outlier.shape = NA) +  # hide outliers from boxplot
+  geom_jitter(width = 0.2, alpha = 0.5, size = 2) +  # add jittered individual points with transparency
+  scale_fill_npg() +  #npg pallete
+  labs(title = "President Age Distribution by Country",
+       x = "Country",
+       y = "President Age") +
+  theme_light() +  # light theme for the plot
+  theme(
+    plot.title = element_text(face = "bold", size = 20),  # bold plot title
+    axis.title = element_text(face = "bold"),  # bold 
+    axis.text = element_text(size = 12),  # text size
+    legend.position = "none"  # hide legend
+  )
+
+president_age_box_plot
+
+```
+
+<br>
+
+# What did I learn?
+
+In this week's *tidy_tuesday*, I learned **a new theme for markdown files** and **a new color pallete**. Both required me to install packages and load libraries, but it was worth it of course. The plot colors are very nice on the eyes, I may use it for my own data sometime soon. The new markdown theme presents the code in a very 'non-busy' format. I did want to learn how to make a new plot but was actually really curious as to what these results were going to look like! I will admit that I failed to animate this plot and eventually gave up but will do my research and come back with a good animated plot next week :)
