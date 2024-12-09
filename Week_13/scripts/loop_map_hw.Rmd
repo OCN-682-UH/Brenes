@@ -1,0 +1,129 @@
+---
+title: "Loop HW"
+author: "Brandon Brenes"
+date: "2024-12-09"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme:
+      bootswatch: flatly
+    highlight: tango
+pdf_document:
+  toc: true
+  highlight: tango
+  latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Description
+
+Today we will be finding the mean and SD of **temperture and light intensity data** from four different '.csv' files using _'for loops'_ and the _map()_ function from tidyverse. The only packages required are tidyverse and here. 
+
+<br>
+
+# Library
+
+```{r}
+
+# libraries #
+
+library(tidyverse)
+library(here)
+
+```
+
+<br>
+
+# Load data
+
+This is where we will prep the loop by helping the computer find our files by identifying the path and labeling the location 'CondPath'. Use the '.csv' to find the files within that location.
+
+```{r}
+
+# file paths needed are here (CondPath) and csv is the pattern being used
+
+CondPath <- here("Week_13", "data", "homework") # location
+files <- dir(path = CondPath, pattern = ".csv", full.names = TRUE) # full file path
+# use location to find files and assign them as 'files'
+
+# display file paths to ensure we g #
+files
+```
+
+<br>
+
+# Loop
+
+This **tide_pool_data tibble** is currently empty but after we run the 'for LOOP' it will fill these columns. The 'for loop' is calculating the mean and sd for temp and light intensity variables in each csv file.
+
+```{r}
+
+# empty tibble to store results #
+
+tide_pool_data <- tibble(
+  filename = rep(NA, length(files)),  # column for filenames and light & T mean and SD
+  temp_mean = rep(NA, length(files)), 
+  temp_sd = rep(NA, length(files)),  
+  light_mean = rep(NA, length(files)), 
+  light_sd = rep(NA, length(files))    
+)
+
+# 'for loop' to use in the tibble
+
+for (i in 1:length(files)) {
+  raw_data <- read_csv(files[i]) 
+  # we used fullname filepath so we dont need to use 'paste0(CondPath,"/",files[i]'
+  # read each CSV in the given file location 
+  tide_pool_data$filename[i] <- basename(files[i])  
+  # store filename in 'raw data'
+  tide_pool_data$temp_mean[i] <- mean(raw_data$Temp.C, na.rm = TRUE)  
+  # calc mean temperature for given Temp C variables in raw data
+  tide_pool_data$temp_sd[i] <- sd(raw_data$Temp.C, na.rm = TRUE)      
+  # calc standard deviation of temperature
+  tide_pool_data$light_mean[i] <- mean(raw_data$Intensity.lux, na.rm = TRUE)  
+  # calc mean light intensity
+  tide_pool_data$light_sd[i] <- sd(raw_data$Intensity.lux, na.rm = TRUE)      
+  # calc standard deviation of light intensity
+}
+
+# display #
+print(tide_pool_data)
+
+```
+
+<br>
+
+# Map()
+Now we will replicate the same summary analysis but using the map() function. 'Files' will be renamed to **tide_pool_data_map** then filename will be the ID for the data for that given csv. The _map_df_ will be used to iterate the function that is reading in a file, creating a tibble and inputting mean and SD for given variables.
+
+```{r}
+
+# use map_df to process files
+
+tide_pool_data_map <- files %>%
+  set_names(basename(.)) %>%  # filename will be used as ID
+  map_df(~ { # iterate this function {...} for each element in 'files' make a df
+    raw_data <- read_csv(.x) # '.x' is shorthand for file, read each file from the raw_data file
+    tibble( # tibble will display all results...
+      filename = basename(.x), #filename column
+      temp_mean = mean(raw_data$Temp.C, na.rm = TRUE),  # calc mean t
+      temp_sd = sd(raw_data$Temp.C, na.rm = TRUE),      # calc sd t
+      light_mean = mean(raw_data$Intensity.lux, na.rm = TRUE),  # calc mean light 
+      light_sd = sd(raw_data$Intensity.lux, na.rm = TRUE)   # calc sd light    
+      #  calc standard deviation of light intensity
+    )
+  })
+
+print(tide_pool_data_map)
+
+```
+
+# Conclusions
+
+After completing this **loop and map() function** to look at mean and SDs in four different csv files in under 1hr, I am now seeing firsthand the power of R. This is not only an incredible efficient way of conducting these high-throughput analyses but also ensuring that it is done with the repeatability. In a sense, we have come full circle from when we learned in our first week how to create csv/excel sheets that need to be repeatable and easy to process/digest in R.
+
+

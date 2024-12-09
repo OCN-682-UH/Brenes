@@ -27,10 +27,9 @@ for (i in years) {
 }
 ```
 
-
 Add the for loop
 
-One line at a time. Let's first add in the column that is going to have all the names in it. Notice that I added an index i in the column name. I also am having the index go from 1:length(years), which is 1:7. I use length() because it allows me to change the number of years in the vector without having to change the for loop. 
+One line at a time. Let's first add in the column that is going to have all the names in it. Notice that I added an index i in the column name. I also am having the index go from 1:length(years), which is 1:7. I use length() because it allows me to change the number of years in the vector without having to change the for loop.
 
 ```{r}
 
@@ -54,6 +53,7 @@ for (i in 1:length(years)){ # set up the for loop where i is the index
 }
 year_data
 ```
+
 ```{r}
 testdata<-read_csv(here("Week_13", "data","cond_data","011521_CT316_1pcal.csv"))
 
@@ -112,9 +112,9 @@ cond_data$mean_sal[i]<-mean(raw_data$Salinity, na.rm =TRUE)
 cond_data
 ```
 
- # simpler ways to do this using map() function
- 
-1. Use a canned function that already exists...
+\# simpler ways to do this using map() function
+
+1.  Use a canned function that already exists...
 
 ```{r}
 1:10 # a vector from 1 to 10 (we are going to do this 10 times)
@@ -123,6 +123,7 @@ cond_data
   map(rnorm, n = 15) # calculate 15 random numbers based on a normal distribution in a list
 
 ```
+
 Another example...
 
 ```{r}
@@ -131,15 +132,15 @@ Another example...
 map_dbl(mean) # calculate the mean. It is now a vector which is type "double"
 ```
 
-
-2. Make your own function...
+2.  Make your own function...
 
 ```{r}
 1:10 %>% # list 1:10
   map(function(x) rnorm(15, x)) %>% # make your own function
   map_dbl(mean)
 ```
-3. Canned function but changing the argument with the function
+
+3.  Canned function but changing the argument with the function
 
 ```{r}
 1:10 %>%
@@ -170,5 +171,3 @@ data<-files %>%
 data
 
 ```
-
- 
