@@ -1,0 +1,130 @@
+---
+title: "class_12a-asking for help in R"
+author: "Brandon Brenes"
+date: "2024-11-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+```
+
+**Be specific,**
+
+-   Search with the keywords and package/function name if known, and include .R in the search keywords (e.g. “dplyr::mutate add column in .R” instead of “mutate variable”)
+
+-   “R” is generic - so consider using “R software” or “.R” Start learning and using language common in R communities & publications (e.g. R4DS), like data frame or tibble instead of spreadsheet
+
+-   For now, anything reading, wrangling, ggplot2 related: considering navigating to documentation from [tidyverse.org](https://www.tidyverse.org/), [rdocumentation](https://www.rdocumentation.org/), or [RStudio/Posit community](https://community.rstudio.com/).
+
+**If you’re asking: What package or function should I use to do this thing?**
+
+-   Don’t know what package/function to use for your purpose? Use [CRAN Task Views](https://cran.r-project.org/web/views/) to help you find it (grouped by topic) to search for packages by keyword
+
+**A lot of these** **errors can be pointed out with chat and or pre-installed R warnings/ERRORS.**
+
+**How to find out what arguments are accepted by which functions:**
+
+-   Viewing the R documentation with ?function_name, and look in the
+    ‘Arguments’ section (or ‘Aesthetics’ section for geoms in ggplot2)
+
+
+```{r}
+
+# libraries #
+
+library(styler)
+library(reprex)
+library(datapasa)
+library(tidyverse)
+
+```
+
+```{r}
+library(tidyverse)
+mpg %>%
+  ggplot(aes(x = displ, y = hwy))%>%
+  geom_point(aes(color = class))
+
+```
+
+Let's say you are trying to make a plot with the mpg dataset and you hit an error.
+
+```{r}
+
+mpg %>%
+  ggplot(aes(x = displ, y = hwy))%>%
+  geom_point(aes(color = class))
+
+```
+
+Go to Addins -> Render Reprex -> Paste to the program you want.
+Make sure to "append session info"
+
+It formats it for you!
+
+Another example...
+
+Using real data...
+lat    long    star_no
+33.548    -117.805    10
+35.534    -121.083    1
+39.503    -123.743    25
+32.863    -117.24    22
+33.46    -117.671    8
+33.548    -117.805    3
+
+this is useless^^
+
+highlight/copy directly from csv and paste as a tribble in the addins section...
+```{r}
+stars<-tibble::tribble(
+      ~lat.long....star_no,
+  "33.548  -117.805    10",
+   "35.534  -121.083    1",
+  "39.503  -123.743    25",
+      "32.863  -117.24 22",
+   "33.46   -117.671    8",
+   "33.548  -117.805    3",
+  "33.603  -117.879    15",
+  "34.39   -119.511    23",
+   "35.156  -120.674    4",
+   "35.316  -120.845    7",
+  "35.534  -121.083    35",
+  "36.623  -121.919    21",
+  "38.306  -123.014    14",
+  "41.78   -124.234    17"
+  )
+
+
+```
+
+
+```{r}
+
+library(forcats)
+library(tidyverse)
+
+# Separate columns into lat, long, and star_no
+star <- star %>%
+  separate(
+    lat_long_star_no, 
+    into = c("lat", "long", "star_no"), 
+    sep = "\\s+"
+  ) %>% 
+  mutate(star_no = as.numeric(star_no)) #ensure star_no is numeric
+
+# Reorder rows by star_no
+star <- star %>%
+  rearrange(star_no)
+
+
+
+
+```
+
+
+
+
