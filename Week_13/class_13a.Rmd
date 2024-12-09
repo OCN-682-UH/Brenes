@@ -1,0 +1,174 @@
+---
+title: "13a_class"
+author: "Brandon Brenes"
+date: "2024-12-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# libraries
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+**for loops** are one way to run an iterative process (do something over and over again). However, with the tidyverse you can avoid needing loops for almost any basic coding needs. Where it does come in handy is in population modeling and Bayesian modeling, for example. Also, it is integral to programming and is happening "under the hood" whether you use them or not.
+
+```{r}
+years<-c(2015:2021)
+
+for (i in years) {
+  print(paste("The year is", i))
+  
+}
+```
+
+
+Add the for loop
+
+One line at a time. Let's first add in the column that is going to have all the names in it. Notice that I added an index i in the column name. I also am having the index go from 1:length(years), which is 1:7. I use length() because it allows me to change the number of years in the vector without having to change the for loop. 
+
+```{r}
+
+#this is the broadest way to make loops to allocate space:
+
+#Pre-allocate space for the for loop
+# empty matrix that is as long as the years vector
+
+year_data<-tibble(year =  rep(NA, length(years)),  
+ # column name for year
+                  year_name = rep(NA, length(years))) 
+# column name for the year name
+year_data
+
+```
+
+```{r}
+
+for (i in 1:length(years)){ # set up the for loop where i is the index
+  year_data$year_name[i]<-paste("The year is", years[i]) # loop over i
+}
+year_data
+```
+```{r}
+testdata<-read_csv(here("Week_13", "data","cond_data","011521_CT316_1pcal.csv"))
+
+glimpse(testdata)
+
+```
+
+# Using for loop
+
+```{r}
+# point to the location on the computer of the folder
+CondPath<-here("Week_13", "data", "cond_data")
+# list all the files in that path with a specific pattern
+# In this case we are looking for everything that has a .csv in the filename
+# you can use regex to be more specific if you are looking for certain patterns in filenames
+files <- dir(path = CondPath,pattern = ".csv")
+files
+
+
+cond_data<- tibble(filename =  rep(NA, length(files)),  # column name for year
+                   mean_temp = rep(NA, length(files)), # column name for the mean temperature
+                   mean_sal = rep(NA, length(files)), # column name for the mean salinity
+                   ) # column name for the year name
+
+
+raw_data<-read_csv(paste0(CondPath,"/",files[1])) # test by reading in the first file and see if it works
+
+head(raw_data)
+
+
+for (i in 1:length(files)){ # loop over 1:3 the number of files
+}
+
+for (i in 1:length(files)){ # loop over 1:3 the number of files 
+raw_data<-read_csv(paste0(CondPath,"/",files[i]))
+glimpse(raw_data)
+}
+
+for (i in 1:length(files)){ # loop over 1:3 the number of files 
+raw_data<-read_csv(paste0(CondPath,"/",files[i]))
+#glimpse(raw_data)
+cond_data$filename[i]<-files[i]
+} 
+
+cond_data
+
+
+for (i in 1:length(files)){ # loop over 1:3 the number of files 
+raw_data<-read_csv(paste0(CondPath,"/",files[i]))
+#glimpse(raw_data)
+cond_data$filename[i]<-files[i]
+cond_data$mean_temp[i]<-mean(raw_data$Temperature, na.rm =TRUE)
+cond_data$mean_sal[i]<-mean(raw_data$Salinity, na.rm =TRUE)
+} 
+
+cond_data
+```
+
+ # simpler ways to do this using map() function
+ 
+1. Use a canned function that already exists...
+
+```{r}
+1:10 # a vector from 1 to 10 (we are going to do this 10 times)
+
+1:10 %>% # a vector from 1 to 10 (we are going to do this 10 times) %>% # the vector to iterate over
+  map(rnorm, n = 15) # calculate 15 random numbers based on a normal distribution in a list
+
+```
+Another example...
+
+```{r}
+1:10 %>% # a vector from 1 to 10 (we are going to do this 10 times) %>% # the vector to iterate over
+  map(rnorm, n = 15) %>% 
+map_dbl(mean) # calculate the mean. It is now a vector which is type "double"
+```
+
+
+2. Make your own function...
+
+```{r}
+1:10 %>% # list 1:10
+  map(function(x) rnorm(15, x)) %>% # make your own function
+  map_dbl(mean)
+```
+3. Canned function but changing the argument with the function
+
+```{r}
+1:10 %>%
+  map(~ rnorm(15, .x)) %>% # changes the arguments inside the function
+  map_dbl(mean)
+```
+
+```{r}
+CondPath<-here("Week_13", "data", "cond_data")
+
+files <- dir(path = CondPath,pattern = ".csv")
+
+files
+
+# or we can do this if we want the full name
+
+files <- dir(path = CondPath,pattern = ".csv", full.names = TRUE)
+#save the entire path name
+
+files
+
+
+
+data<-files %>%
+  set_names()%>% # set's the id of each list to the file name
+  map_df(read_csv,.id = "filename") # map everything to a dataframe and put the id in a column called filename
+
+data
+
+```
+
+ 
