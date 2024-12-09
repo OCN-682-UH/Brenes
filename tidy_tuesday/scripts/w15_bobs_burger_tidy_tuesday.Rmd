@@ -1,0 +1,155 @@
+---
+title: "Bobs Burgers Tidy Tuesday"
+author: "Brandon Brenes"
+date: "2024-12-09"
+output:
+  html_document:
+    theme: united
+    toc: true
+    toc_float: true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+```
+
+<br>
+
+# Description
+
+Using the **Bobs Burger Tidy Tuesday** data, we will be making a geom_point plot that has the regression equation and a trend line showing the relationship between \_question/exclamation_ratios vs. *sentiment_variance*. We will display how this varies across seasons by assigning colors.
+
+<br>
+
+# Libraries and Load Data
+
+```{r}
+
+# library #
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+library(ggpmisc)
+library(kableExtra)
+
+```
+
+```{r}
+
+# load data from tidy tuesday bobs burgers data #
+
+raw_bob <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2024/2024-11-19/episode_metrics.csv')
+
+# display #
+head(raw_bob)
+
+```
+
+<br>
+
+# Data manipulation
+
+We will clean up the data by making the episode a factor, selecting for the columns needed (season, episode, sentiment_variance, question_ratio, exclamation_ratio)
+
+```{r}
+# clean up raw data #
+
+bob_data_clean <- raw_bob %>%
+  mutate(episode = as.factor(episode)) %>%  # convert 'pisode to factor
+  select(season, episode, sentiment_variance, question_ratio, exclamation_ratio)  # select  columns
+
+# display on table #
+bob_data_clean %>%
+  head(6) %>% 
+  kable() 
+
+
+```
+
+<br>
+
+# Plot
+
+Using **ggplot** and **geom_point & geom_smooth**, we will create a point plot using the **bob_data_clean** data. We will also make season a color scale legend so we can visualize any change with time. We will do this for both the exclamation and question ratio. These plots will be combined into one and saved to ouputs
+
+## Exclamation Ratio vs. Sentiment Variance
+
+```{r}
+
+# plot 1: exclamation ratio vs. sentiment variance
+plot_exclamation <- ggplot(bob_data_clean, aes(x = exclamation_ratio, y = sentiment_variance, color = season)) +
+    geom_point(size = 3, alpha = 0.8) +  # point plot
+    geom_smooth(method = "lm", aes(group = 1), se = FALSE, color = "red") +  
+  # trendline in red
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                 formula = y ~ x,   # equation for regression analysis
+                 parse = TRUE, 
+                 color = "red") +  # red text for equations
+    theme_minimal(base_size = 14) +
+    scale_color_viridis_c(name = "Season", option = "D") +  
+  # color scale for season gradient
+    labs(
+        x = "Exclamation Ratio",
+        y = "Sentiment Variance"
+    ) +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        axis.title = element_text(face = "bold", size = 10),  # bold axis titles
+        axis.text = element_text(face = "bold"),  # bold axis texts
+        legend.position = "none"  # remove individual legend from this plot
+    )
+```
+
+## Question Ratio vs. Sentiment Variance
+
+```{r}
+# plot 2: question ratio vs. sentiment variance
+plot_question <- ggplot(bob_data_clean, aes(x = question_ratio, y = sentiment_variance, color = season)) +
+    geom_point(size = 3, alpha = 0.8) +  # point plot
+    geom_smooth(method = "lm", aes(group = 1), se = FALSE, color = "red") +  
+  # trendline in red
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                 # equation for regression analysis
+                 formula = y ~ x, 
+                 parse = TRUE, 
+                 color = "red") +  # red text for equations
+    theme_minimal(base_size = 14) +
+    scale_color_viridis_c(name = "Season", option = "D") +  
+  # color scale for season gradient
+    labs(
+        x = "Question Ratio",
+        y = "Sentiment Variance"
+    ) +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        axis.title = element_text(face = "bold", size = 10),  # bold axis titles
+        axis.text = element_text(face = "bold"),  # bold axis texts
+        legend.position = "none"  # remove individual legend from this plot
+    )
+
+```
+
+## Combine the plots
+
+```{r}
+combined_plot <- plot_exclamation + plot_question +
+    plot_annotation(title = "Exclamation/Question ratio vs. Sentiment variance", 
+                    theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))) +
+    plot_layout(guides = "collect") +  # collect the legends from both plots into one
+    theme(legend.position = "bottom",  # place the legend at the bottom
+          legend.key.size = unit(0.5, "cm"),  # make legend  smaller
+          legend.text = element_text(size = 8))  # make text smaller
+# display #
+combined_plot
+```
+
+<br>
+
+# What did I learn?
+
+I learned how to use Rstudio to do a regression analysis while also displaying the equation and R\^2 results on the graphs themselves. This is something I haven't done in Rstudio before, prior to this I used excel. Now, of course, I realize that Rstudio can do this and so much more, making my life so much easier.
+
+P.S. the plot displayed weirdly above but is corrected in the output file
